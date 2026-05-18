@@ -1,0 +1,21 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+.env.local
+*.log
+
+# Pre-downloaded ML models (fetched in Dockerfile, never commit)
+models/*.onnx
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Local dev artifacts
+backups/
+screenshots/local/

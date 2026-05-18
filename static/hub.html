@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Hub — Boni Brands</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23000'/><rect x='16' y='4' width='14' height='24' rx='5' fill='%23ff9900'/><text x='8' y='22' font-family='Arial Black' font-size='14' font-weight='900' fill='white' text-anchor='middle'>P</text><text x='23' y='22' font-family='Arial Black' font-size='14' font-weight='900' fill='%23000' text-anchor='middle'>H</text></svg>">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0f0b1a;
+    --glass: rgba(255, 255, 255, 0.06);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --accent: #714B67;
+    --accent-light: #a06b92;
+    --accent-glow: rgba(113, 75, 103, 0.4);
+    --text: #f0eaf0;
+    --text-dim: rgba(240, 234, 240, 0.5);
+    --green: #4ade80;
+    --blue: #60a5fa;
+    --orange: #fb923c;
+    --yellow: #facc15;
+    --purple: #c084fc;
+    --ph-orange: #ff9900;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  .orb { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.3; pointer-events: none; animation: float 20s ease-in-out infinite; }
+  .orb-1 { width: 400px; height: 400px; background: var(--accent); top: -100px; left: -100px; }
+  .orb-2 { width: 300px; height: 300px; background: #4a2d6e; bottom: -50px; right: -50px; animation-delay: -7s; }
+  .orb-3 { width: 250px; height: 250px; background: #2d4a6e; top: 50%; left: 50%; animation-delay: -14s; }
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -30px) scale(1.05); }
+    66% { transform: translate(-20px, 20px) scale(0.95); }
+  }
+  .header { text-align: center; padding: 60px 20px 20px; position: relative; z-index: 1; opacity: 0; animation: fadeDown 0.8s ease forwards; }
+  .ph-logo { display: inline-flex; align-items: center; gap: 0; user-select: none; margin-bottom: 12px; }
+  .ph-logo .word-product { font-size: 2.6rem; font-weight: 900; color: #fff; letter-spacing: -1px; font-family: 'Inter', sans-serif; }
+  .ph-logo .word-hub { font-size: 2.6rem; font-weight: 900; color: #000; letter-spacing: -1px; font-family: 'Inter', sans-serif; background: var(--ph-orange); padding: 2px 14px; border-radius: 10px; margin-left: 6px; display: inline-block; }
+  .header p { color: var(--text-dim); font-size: 1rem; margin-top: 8px; font-weight: 300; }
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; max-width: 1000px; margin: 40px auto; padding: 0 24px; position: relative; z-index: 1; }
+  .card { position: relative; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; padding: 32px 28px; cursor: pointer; text-decoration: none; color: var(--text); display: flex; flex-direction: column; gap: 16px; transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); overflow: hidden; opacity: 0; animation: cardIn 0.6s ease forwards; }
+  .card:nth-child(1) { animation-delay: 0.15s; }
+  .card:nth-child(2) { animation-delay: 0.25s; }
+  .card:nth-child(3) { animation-delay: 0.35s; }
+  .card:nth-child(4) { animation-delay: 0.45s; }
+  .card:nth-child(5) { animation-delay: 0.55s; }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(40px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .card::before { content: ''; position: absolute; inset: 0; border-radius: 20px; background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.07) 0%, transparent 60%); opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
+  .card:hover::before { opacity: 1; }
+  .card:hover { transform: perspective(800px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-4px); box-shadow: 0 20px 60px -15px var(--card-glow, var(--accent-glow)); border-color: rgba(255, 255, 255, 0.2); }
+  .card::after { content: ''; position: absolute; inset: -1px; border-radius: 20px; background: linear-gradient(135deg, transparent 40%, var(--card-color, var(--accent)) 100%); opacity: 0; transition: opacity 0.4s ease; z-index: -1; filter: blur(1px); }
+  .card:hover::after { opacity: 0.3; }
+  .card-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; background: var(--card-color-bg, rgba(113, 75, 103, 0.2)); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+  .card:hover .card-icon { transform: scale(1.1) rotate(-3deg); box-shadow: 0 0 20px var(--card-glow, var(--accent-glow)); }
+  .card-title { font-size: 1.2rem; font-weight: 600; letter-spacing: -0.3px; }
+  .card-desc { font-size: 0.88rem; color: var(--text-dim); line-height: 1.5; font-weight: 300; }
+  .card-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 500; padding: 4px 10px; border-radius: 8px; background: rgba(255,255,255,0.06); color: var(--text-dim); width: fit-content; margin-top: auto; }
+  .card-badge.active { color: var(--green); background: rgba(74, 222, 128, 0.1); }
+  .card-badge.soon { color: var(--orange); background: rgba(251, 146, 60, 0.1); }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+  .card--green  { --card-color: var(--green);  --card-glow: rgba(74,222,128,0.3);  --card-color-bg: rgba(74,222,128,0.15); }
+  .card--blue   { --card-color: var(--blue);   --card-glow: rgba(96,165,250,0.3);  --card-color-bg: rgba(96,165,250,0.15); }
+  .card--orange { --card-color: var(--orange); --card-glow: rgba(251,146,60,0.3); --card-color-bg: rgba(251,146,60,0.15); }
+  .card--yellow { --card-color: var(--yellow); --card-glow: rgba(250,204,21,0.3); --card-color-bg: rgba(250,204,21,0.15); }
+  .card--purple { --card-color: var(--purple); --card-glow: rgba(192,132,252,0.3); --card-color-bg: rgba(192,132,252,0.15); }
+  .footer { text-align: center; padding: 40px 20px 30px; color: var(--text-dim); font-size: 0.8rem; position: relative; z-index: 1; opacity: 0; animation: fadeDown 0.8s ease 0.7s forwards; }
+  @media (max-width: 600px) { .ph-logo .word-product, .ph-logo .word-hub { font-size: 1.8rem; } .ph-logo .word-hub { padding: 1px 10px; border-radius: 7px; } .grid { gap: 16px; padding: 0 16px; } .card { padding: 24px 20px; } }
+</style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+<div class="header">
+  <div class="ph-logo">
+    <span class="word-product">Product</span><span class="word-hub">Hub</span>
+  </div>
+  <p>Boni Brands — Product Management</p>
+</div>
+<div class="grid">
+  <a class="card card--green" href="/create" id="card-new">
+    <div class="card-icon">📦</div>
+    <div class="card-title">Новий товар</div>
+    <div class="card-desc">Створення товару з фото, AI-аналіз, генерація контенту та публікація</div>
+    <div class="card-badge active"><span class="badge-dot"></span> Active</div>
+  </a>
+  <div class="card card--blue" id="card-bundle">
+    <div class="card-icon">🧩</div>
+    <div class="card-title">Бандл / Комплект</div>
+    <div class="card-desc">Збірка товару з існуючих компонентів, BOM та kit-конфігурація</div>
+    <div class="card-badge soon"><span class="badge-dot"></span> Coming soon</div>
+  </div>
+  <div class="card card--purple" id="card-variants">
+    <div class="card-icon">🎨</div>
+    <div class="card-title">Варіації</div>
+    <div class="card-desc">Створення варіантів товару — розмір, колір, матеріал</div>
+    <div class="card-badge soon"><span class="badge-dot"></span> Coming soon</div>
+  </div>
+  <a class="card card--yellow" href="/search" id="card-search">
+    <div class="card-icon">🔍</div>
+    <div class="card-title">Пошук</div>
+    <div class="card-desc">Швидкий пошук по SKU, назві, баркоду з редагуванням карточки</div>
+    <div class="card-badge active"><span class="badge-dot"></span> Active</div>
+  </a>
+  <div class="card card--orange" id="card-drafts">
+    <div class="card-icon">📝</div>
+    <div class="card-title">Draft-и</div>
+    <div class="card-desc">Неопубліковані товари з неповними даними — дозаповнення та публікація</div>
+    <div class="card-badge soon"><span class="badge-dot"></span> Coming soon</div>
+  </div>
+</div>
+<div class="footer">Boni Brands © 2026 — Powered by Coolify + Odoo</div>
+<script>
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      card.style.setProperty('--rx', ((y - centerY) / centerY) * -6 + 'deg');
+      card.style.setProperty('--ry', ((x - centerX) / centerX) * 6 + 'deg');
+      card.style.setProperty('--mx', (x / rect.width * 100) + '%');
+      card.style.setProperty('--my', (y / rect.height * 100) + '%');
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.setProperty('--rx', '0deg');
+      card.style.setProperty('--ry', '0deg');
+      card.style.transition = 'transform 0.5s ease, box-shadow 0.3s ease, border-color 0.3s ease';
+      setTimeout(() => { card.style.transition = ''; }, 500);
+    });
+  });
+  document.querySelectorAll('.card:not([href])').forEach(card => {
+    card.addEventListener('click', () => {
+      const title = card.querySelector('.card-title').textContent;
+      const toast = document.createElement('div');
+      toast.textContent = title + ' — скоро буде доступно ✨';
+      Object.assign(toast.style, {
+        position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%) translateY(20px)',
+        background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px',
+        padding: '12px 24px', color: '#f0eaf0', fontSize: '0.9rem', fontFamily: 'Inter, sans-serif',
+        zIndex: '9999', opacity: '0', transition: 'all 0.4s ease', whiteSpace: 'nowrap'
+      });
+      document.body.appendChild(toast);
+      requestAnimationFrame(() => { toast.style.opacity = '1'; toast.style.transform = 'translateX(-50%) translateY(0)'; });
+      setTimeout(() => {
+        toast.style.opacity = '0'; toast.style.transform = 'translateX(-50%) translateY(20px)';
+        setTimeout(() => toast.remove(), 400);
+      }, 2000);
+    });
+  });
+</script>
+</body>
+</html>

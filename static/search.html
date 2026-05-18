@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Product Search — Boni Brands</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f0b1a;--surface:rgba(255,255,255,0.06);--surface-hover:rgba(255,255,255,0.1);--glass-border:rgba(255,255,255,0.1);--accent:#714B67;--accent-light:#a06b92;--accent-glow:rgba(113,75,103,0.4);--text:#f0eaf0;--text-dim:rgba(240,234,240,0.5);--text-mid:rgba(240,234,240,0.7);--green:#4ade80;--red:#f87171;--blue:#60a5fa;--orange:#fb923c;--yellow:#facc15;--input-bg:rgba(255,255,255,0.05);--input-border:rgba(255,255,255,0.12);--input-focus:rgba(113,75,103,0.5);--radius:14px;--radius-sm:10px}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+.orb{position:fixed;border-radius:50%;filter:blur(80px);opacity:.25;pointer-events:none;animation:float 20s ease-in-out infinite}
+.orb-1{width:400px;height:400px;background:var(--accent);top:-100px;left:-100px}
+.orb-2{width:300px;height:300px;background:#2d4a6e;bottom:-50px;right:-50px;animation-delay:-7s}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-30px) scale(1.05)}66%{transform:translate(-20px,20px) scale(.95)}}
+
+.container{max-width:900px;margin:0 auto;padding:16px;position:relative;z-index:1}
+
+.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--text-dim);text-decoration:none;font-size:.85rem;padding:8px 0;transition:color .2s}
+.back-link:hover{color:var(--text)}
+
+.header{text-align:center;padding:20px 0 24px;opacity:0;animation:fadeDown .6s ease forwards}
+.header h1{font-size:1.8rem;font-weight:700;background:linear-gradient(135deg,var(--text),var(--yellow));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header p{color:var(--text-dim);font-size:.9rem;margin-top:4px;font-weight:300}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-15px)}to{opacity:1;transform:translateY(0)}}
+
+.search-box{background:var(--surface);border:1px solid var(--glass-border);border-radius:var(--radius);padding:16px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;flex-direction:column;gap:12px;opacity:0;animation:fadeDown .6s ease .1s forwards}
+.search-row{display:flex;gap:10px}
+.search-input{flex:1;background:var(--input-bg);border:1px solid var(--input-border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:1rem;padding:12px 16px;outline:none;transition:border-color .2s,box-shadow .2s}
+.search-input:focus{border-color:var(--input-focus);box-shadow:0 0 0 3px rgba(113,75,103,.2)}
+.search-input::placeholder{color:var(--text-dim)}
+.search-btn{background:linear-gradient(135deg,var(--accent),var(--accent-light));color:#fff;border:none;border-radius:var(--radius-sm);padding:12px 24px;font-family:inherit;font-size:.95rem;font-weight:600;cursor:pointer;transition:transform .15s,box-shadow .2s;white-space:nowrap;min-height:48px}
+.search-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px var(--accent-glow)}
+.search-btn:active{transform:scale(.97)}
+
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.filter-chip{background:var(--input-bg);border:1px solid var(--input-border);border-radius:20px;color:var(--text-mid);font-family:inherit;font-size:.8rem;padding:6px 14px;cursor:pointer;transition:all .2s;user-select:none}
+.filter-chip:hover{border-color:var(--glass-border);background:var(--surface-hover)}
+.filter-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.stats{display:flex;justify-content:space-between;align-items:center;padding:16px 0 8px;color:var(--text-dim);font-size:.85rem}
+.stats-count{font-weight:500}
+
+.results{display:flex;flex-direction:column;gap:12px;padding-bottom:80px}
+
+.product-card{background:var(--surface);border:1px solid var(--glass-border);border-radius:var(--radius);padding:16px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;gap:16px;transition:border-color .2s,transform .15s,box-shadow .2s;cursor:pointer;opacity:0;animation:cardIn .4s ease forwards}
+.product-card:hover{border-color:rgba(255,255,255,.2);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.3)}
+@keyframes cardIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+.product-img{width:80px;height:80px;border-radius:var(--radius-sm);background:rgba(255,255,255,.03);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.product-img img{width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm)}
+.product-img .no-img{font-size:2rem;opacity:.3}
+
+.product-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.product-sku{font-size:.75rem;font-weight:600;color:var(--yellow);letter-spacing:.5px}
+.product-name{font-size:.95rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.product-meta{display:flex;flex-wrap:wrap;gap:8px;font-size:.8rem;color:var(--text-dim);margin-top:2px}
+.product-meta span{display:inline-flex;align-items:center;gap:3px}
+
+.product-prices{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.price-sale{font-size:1.1rem;font-weight:700;color:var(--green)}
+.price-cost{font-size:.8rem;color:var(--text-dim)}
+.stock-badge{font-size:.7rem;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.stock-in{background:rgba(74,222,128,.12);color:var(--green)}
+.stock-out{background:rgba(248,113,113,.12);color:var(--red)}
+.stock-na{background:rgba(255,255,255,.05);color:var(--text-dim)}
+.company-badge{font-size:.65rem;font-weight:500;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.06);color:var(--text-dim);white-space:nowrap}
+
+.loading{text-align:center;padding:40px;color:var(--text-dim)}
+.loading .spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--glass-border);border-top-color:var(--accent-light);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.empty{text-align:center;padding:60px 20px;color:var(--text-dim)}
+.empty-icon{font-size:3rem;margin-bottom:12px;opacity:.4}
+.empty-text{font-size:1rem;margin-bottom:4px}
+.empty-sub{font-size:.85rem;opacity:.6}
+
+.load-more{display:block;width:100%;background:var(--surface);border:1px solid var(--glass-border);border-radius:var(--radius-sm);color:var(--text-mid);font-family:inherit;font-size:.9rem;padding:14px;cursor:pointer;transition:all .2s;margin-top:4px}
+.load-more:hover{background:var(--surface-hover);border-color:rgba(255,255,255,.2)}
+
+.detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:100;justify-content:center;align-items:flex-start;padding:20px;overflow-y:auto}
+.detail-overlay.open{display:flex}
+.detail-panel{background:var(--bg);border:1px solid var(--glass-border);border-radius:20px;width:100%;max-width:600px;margin-top:40px;padding:24px;position:relative;animation:slideUp .3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.detail-close{position:absolute;top:12px;right:16px;background:none;border:none;color:var(--text-dim);font-size:1.5rem;cursor:pointer;padding:8px;line-height:1}
+.detail-close:hover{color:var(--text)}
+.detail-header{display:flex;gap:16px;margin-bottom:20px}
+.detail-img{width:120px;height:120px;border-radius:var(--radius);background:rgba(255,255,255,.03);overflow:hidden;flex-shrink:0}
+.detail-img img{width:100%;height:100%;object-fit:cover}
+.detail-title-block{flex:1}
+.detail-sku{font-size:.85rem;font-weight:600;color:var(--yellow);margin-bottom:4px}
+.detail-name{font-size:1.2rem;font-weight:600;margin-bottom:8px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.detail-field{background:var(--surface);border-radius:var(--radius-sm);padding:12px}
+.detail-field label{display:block;font-size:.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.detail-field .val{font-size:.95rem;font-weight:500}
+.detail-actions{display:flex;gap:10px}
+.detail-actions a,.detail-actions button{flex:1;text-align:center;padding:12px;border-radius:var(--radius-sm);font-family:inherit;font-size:.9rem;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s;min-height:48px;display:flex;align-items:center;justify-content:center}
+.btn-odoo{background:linear-gradient(135deg,var(--accent),var(--accent-light));color:#fff;border:none}
+.btn-odoo:hover{box-shadow:0 4px 20px var(--accent-glow)}
+.btn-copy{background:var(--surface);border:1px solid var(--glass-border);color:var(--text)}
+.btn-copy:hover{background:var(--surface-hover)}
+
+@media(max-width:600px){
+  .header h1{font-size:1.4rem}
+  .search-row{flex-direction:column}
+  .search-btn{width:100%}
+  .product-card{padding:12px;gap:12px}
+  .product-img{width:64px;height:64px}
+  .product-name{font-size:.88rem}
+  .price-sale{font-size:.95rem}
+  .detail-panel{margin-top:10px;padding:16px;border-radius:16px}
+  .detail-header{flex-direction:column;align-items:center;text-align:center}
+  .detail-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="container">
+  <a class="back-link" href="/">← Product Hub</a>
+  <div class="header">
+    <h1>🔍 Product Search</h1>
+    <p>Пошук по SKU, назві або баркоду</p>
+  </div>
+  <div class="search-box">
+    <div class="search-row">
+      <input class="search-input" id="searchInput" type="text" placeholder="SKU, product name, or barcode..." autofocus>
+      <button class="search-btn" id="searchBtn">Search</button>
+    </div>
+    <div class="filters">
+      <div class="filter-chip active" data-company="0">All</div>
+      <div class="filter-chip" data-company="1">Boni-Shop</div>
+      <div class="filter-chip" data-company="2">HAJUS AG</div>
+    </div>
+  </div>
+  <div class="stats" id="stats" style="display:none">
+    <span class="stats-count" id="statsCount"></span>
+    <span id="statsTime"></span>
+  </div>
+  <div class="results" id="results">
+    <div class="empty">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-text">Введи запит для пошуку</div>
+      <div class="empty-sub">SKU, назва товару або баркод</div>
+    </div>
+  </div>
+</div>
+
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-panel" id="detailPanel">
+    <button class="detail-close" id="detailClose">&times;</button>
+    <div class="detail-header">
+      <div class="detail-img" id="detailImg"></div>
+      <div class="detail-title-block">
+        <div class="detail-sku" id="detailSku"></div>
+        <div class="detail-name" id="detailName"></div>
+        <div class="company-badge" id="detailCompany"></div>
+      </div>
+    </div>
+    <div class="detail-grid" id="detailGrid"></div>
+    <div class="detail-actions">
+      <a class="btn-odoo" id="detailOdoo" href="#" target="_blank">Open in Odoo</a>
+      <button class="btn-copy" id="detailCopy">Copy SKU</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "/api/search";
+const ODOO_URL = "https://odoo.boni.tools/odoo/product-template";
+let currentCompany = 0;
+let currentQuery = "";
+let currentOffset = 0;
+let allProducts = [];
+
+const $ = id => document.getElementById(id);
+
+document.querySelectorAll('.filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentCompany = parseInt(chip.dataset.company);
+    doSearch(true);
+  });
+});
+
+$('searchBtn').addEventListener('click', () => doSearch(true));
+$('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(true); });
+
+let debounceTimer;
+$('searchInput').addEventListener('input', () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => doSearch(true), 500);
+});
+
+// doSearch — UI helper (legacy port from Windmill)
+async function doSearch(reset = false) {
+  const query = $('searchInput').value.trim();
+  if (!query && currentCompany === 0) {
+    $('results').innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">Введи запит для пошуку</div><div class="empty-sub">SKU, назва товару або баркод</div></div>';
+    $('stats').style.display = 'none';
+    return;
+  }
+  currentQuery = query;
+  if (reset) { currentOffset = 0; allProducts = []; }
+
+  const startTime = Date.now();
+
+  if (reset) {
+    $('results').innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">Searching...</p></div>';
+  }
+
+  try {
+    const body = JSON.stringify({
+      query: query || "",
+      company: currentCompany,
+      limit: 20,
+      offset: currentOffset
+    });
+
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+      credentials: 'same-origin',
+    });
+    const data = await res.json();
+    // elapsed seconds for stats display
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+
+    if (data.error) {
+      $('results').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Error: ' + data.error + '</div></div>';
+      return;
+    }
+
+    const records = data.records || [];
+    const total = data.total || 0;
+    allProducts = reset ? records : [...allProducts, ...records];
+    currentOffset = allProducts.length;
+
+    $('stats').style.display = 'flex';
+    $('statsCount').textContent = total + ' product' + (total !== 1 ? 's' : '') + ' found';
+    $('statsTime').textContent = elapsed + 's';
+
+    if (allProducts.length === 0) {
+      $('results').innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">Нічого не знайдено</div><div class="empty-sub">Спробуй інший запит</div></div>';
+      return;
+    }
+
+    let html = allProducts.map((p, i) => {
+      const sku = p.default_code || '—';
+      const name = p.name || 'Unnamed';
+      const sale = p.list_price != null ? '€' + p.list_price.toFixed(2) : '—';
+      const cost = p.standard_price != null ? '€' + p.standard_price.toFixed(2) : '—';
+      const qty = p.qty_available;
+      const weight = p.weight ? p.weight.toFixed(2) + ' kg' : '';
+      const barcode = p.barcode || '';
+      const company = p.x_studio_x_company_id;
+      const companyName = company ? (Array.isArray(company) ? company[1] : company) : '';
+      const hasImg = p.image_128 && p.image_128 !== false;
+      const imgHtml = hasImg
+        ? '<img src="data:image/png;base64,' + p.image_128 + '" alt="">'
+        : '<div class="no-img">📦</div>';
+
+      let stockClass = 'stock-na', stockText = 'N/A';
+      if (p.is_storable) {
+        if (qty > 0) { stockClass = 'stock-in'; stockText = qty + ' in stock'; }
+        else { stockClass = 'stock-out'; stockText = 'Out of stock'; }
+      }
+
+      return '<div class="product-card" style="animation-delay:' + (i * 0.03) + 's" data-id="' + p.id + '" onclick="showDetail(' + p.id + ')">' +
+        '<div class="product-img">' + imgHtml + '</div>' +
+        '<div class="product-info">' +
+          '<div class="product-sku">' + sku + '</div>' +
+          '<div class="product-name">' + escHtml(name) + '</div>' +
+          '<div class="product-meta">' +
+            (weight ? '<span>⚖️ ' + weight + '</span>' : '') +
+            (barcode ? '<span>📊 ' + barcode + '</span>' : '') +
+            (companyName ? '<span class="company-badge">' + escHtml(String(companyName)) + '</span>' : '') +
+          '</div>' +
+        '</div>' +
+        '<div class="product-prices">' +
+          '<div class="price-sale">' + sale + '</div>' +
+          '<div class="price-cost">Cost: ' + cost + '</div>' +
+          '<span class="stock-badge ' + stockClass + '">' + stockText + '</span>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    if (allProducts.length < total) {
+      html += '<button class="load-more" onclick="loadMore()">Load more (' + (total - allProducts.length) + ' remaining)</button>';
+    }
+
+    $('results').innerHTML = html;
+  } catch (err) {
+    $('results').innerHTML = '<div class="empty"><div class="empty-icon">❌</div><div class="empty-text">Connection error</div><div class="empty-sub">' + escHtml(err.message) + '</div></div>';
+  }
+}
+
+// loadMore — UI helper (legacy port from Windmill)
+function loadMore() {
+  doSearch(false);
+}
+
+// escHtml — UI helper (legacy port from Windmill)
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// showDetail — UI helper (legacy port from Windmill)
+function showDetail(id) {
+  const p = allProducts.find(x => x.id === id);
+  if (!p) return;
+
+  const hasImg = p.image_128 && p.image_128 !== false;
+  $('detailImg').innerHTML = hasImg
+    ? '<img src="data:image/png;base64,' + p.image_128 + '" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius)">'
+    : '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:3rem;opacity:.3">📦</div>';
+
+  $('detailSku').textContent = p.default_code || '—';
+  $('detailName').textContent = p.name || 'Unnamed';
+
+  const company = p.x_studio_x_company_id;
+  $('detailCompany').textContent = company ? (Array.isArray(company) ? company[1] : company) : '—';
+
+  const fields = [
+    { label: 'Sale Price', val: p.list_price != null ? '€' + p.list_price.toFixed(2) : '—' },
+    { label: 'Cost Price', val: p.standard_price != null ? '€' + p.standard_price.toFixed(2) : '—' },
+    { label: 'Weight', val: p.weight ? p.weight.toFixed(2) + ' kg' : '—' },
+    { label: 'Barcode', val: p.barcode || '—' },
+    { label: 'HS Code', val: p.hs_code || '—' },
+    { label: 'Tracking', val: p.tracking || '—' },
+    { label: 'Stock', val: p.is_storable ? (p.qty_available || 0) + ' units' : 'Not tracked' },
+    { label: 'Category', val: p.categ_id ? (Array.isArray(p.categ_id) ? p.categ_id[1] : p.categ_id) : '—' },
+  ];
+
+  $('detailGrid').innerHTML = fields.map(f =>
+    '<div class="detail-field"><label>' + f.label + '</label><div class="val">' + escHtml(String(f.val)) + '</div></div>'
+  ).join('');
+
+  $('detailOdoo').href = ODOO_URL + '/' + p.id;
+  $('detailCopy').onclick = () => {
+    navigator.clipboard.writeText(p.default_code || '');
+    $('detailCopy').textContent = 'Copied! ✓';
+    setTimeout(() => { $('detailCopy').textContent = 'Copy SKU'; }, 1500);
+  };
+
+  $('detailOverlay').classList.add('open');
+}
+
+$('detailClose').addEventListener('click', () => $('detailOverlay').classList.remove('open'));
+$('detailOverlay').addEventListener('click', e => {
+  if (e.target === $('detailOverlay')) $('detailOverlay').classList.remove('open');
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') $('detailOverlay').classList.remove('open');
+});
+</script>
+</body>
+</html>

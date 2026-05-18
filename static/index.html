@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boni Product Creator</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232733;
+    --border: #2e3340;
+    --text: #e4e6eb;
+    --text2: #9ca3af;
+    --accent: #6366f1;
+    --accent-hover: #818cf8;
+    --green: #22c55e;
+    --red: #ef4444;
+    --orange: #f59e0b;
+    --blue: #3b82f6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.5; min-height: 100vh;
+  }
+  .app { max-width: 1200px; margin: 0 auto; padding: 20px; }
+  h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 4px; }
+  .subtitle { color: var(--text2); font-size: 0.85rem; margin-bottom: 24px; }
+
+  /* Steps indicator */
+  .steps { display: flex; gap: 8px; margin-bottom: 24px; }
+  .step {
+    flex: 1; padding: 10px 16px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px;
+    font-size: 0.8rem; color: var(--text2); cursor: default;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .step.active { border-color: var(--accent); color: var(--text); }
+  .step.done { border-color: var(--green); color: var(--green); }
+  .step-num {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--surface2); display: flex; align-items: center;
+    justify-content: center; font-weight: 600; font-size: 0.75rem;
+  }
+  .step.active .step-num { background: var(--accent); color: #fff; }
+  .step.done .step-num { background: var(--green); color: #fff; }
+
+  /* Panels */
+  .panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px; margin-bottom: 16px;
+  }
+  .panel-title {
+    font-size: 0.95rem; font-weight: 600; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  /* Upload area */
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: 12px;
+    padding: 40px; text-align: center; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent); background: rgba(99,102,241,0.05);
+  }
+  .upload-zone input { display: none; }
+  .upload-icon { font-size: 2rem; margin-bottom: 8px; }
+  .upload-text { color: var(--text2); font-size: 0.85rem; }
+
+  /* Image thumbnails */
+  .thumbnails { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .thumb {
+    width: 80px; height: 80px; border-radius: 8px; overflow: hidden;
+    position: relative; border: 2px solid var(--border);
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb .remove {
+    position: absolute; top: 2px; right: 2px;
+    background: rgba(0,0,0,0.7); color: #fff; border: none;
+    border-radius: 50%; width: 20px; height: 20px; cursor: pointer;
+    font-size: 0.7rem; display: flex; align-items: center; justify-content: center;
+  }
+  .thumb.main { border-color: var(--accent); }
+  .thumb.main::after {
+    content: 'MAIN'; position: absolute; bottom: 0; left: 0; right: 0;
+    background: var(--accent); color: #fff; font-size: 0.55rem;
+    text-align: center; padding: 1px;
+  }
+
+  /* Description input */
+  .desc-input {
+    width: 100%; padding: 10px 14px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-size: 0.85rem; margin-top: 12px;
+    resize: none; font-family: inherit;
+  }
+  .desc-input:focus { outline: none; border-color: var(--accent); }
+
+  /* Buttons */
+  .btn {
+    padding: 10px 20px; border-radius: 8px; font-size: 0.85rem;
+    font-weight: 500; cursor: pointer; border: none; transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); }
+  .btn-green { background: var(--green); color: #fff; }
+  .btn-green:hover { background: #16a34a; }
+  .btn-green:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Form grid */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label {
+    font-size: 0.75rem; color: var(--text2); font-weight: 500;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .form-group label .required { color: var(--red); }
+  .form-group input, .form-group textarea, .form-group select {
+    padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-size: 0.85rem;
+    font-family: inherit;
+  }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .form-group.error input, .form-group.error textarea, .form-group.error select {
+    border-color: var(--red);
+  }
+  .form-group .error-msg {
+    color: var(--red); font-size: 0.7rem; display: none;
+  }
+  .form-group.error .error-msg { display: block; }
+
+  /* SKU selector */
+  .sku-options { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sku-option {
+    padding: 8px 14px; background: var(--surface2); border: 2px solid var(--border);
+    border-radius: 8px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s;
+  }
+  .sku-option:hover { border-color: var(--accent); }
+  .sku-option.selected { border-color: var(--accent); background: rgba(99,102,241,0.1); }
+  .sku-option .sku-code { font-weight: 600; }
+  .sku-option .sku-company { color: var(--text2); font-size: 0.7rem; }
+
+  /* Missing data banner */
+  .missing-banner {
+    background: rgba(245,158,11,0.1); border: 1px solid var(--orange);
+    border-radius: 10px; padding: 14px 18px; margin-bottom: 16px;
+    display: none;
+  }
+  .missing-banner.show { display: block; }
+  .missing-banner h3 {
+    color: var(--orange); font-size: 0.85rem; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .missing-list { list-style: none; }
+  .missing-list li {
+    color: var(--text2); font-size: 0.8rem; padding: 3px 0;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .missing-list li::before { content: '⚠'; }
+  .missing-list .fix-btn {
+    color: var(--accent); cursor: pointer; font-size: 0.75rem;
+    text-decoration: underline; border: none; background: none;
+  }
+
+  /* Chat */
+  .chat-container {
+    border-top: 1px solid var(--border); margin-top: 16px; padding-top: 12px;
+  }
+  .chat-messages {
+    max-height: 300px; overflow-y: auto; margin-bottom: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .chat-msg {
+    padding: 8px 12px; border-radius: 10px; font-size: 0.82rem;
+    max-width: 85%; word-wrap: break-word;
+  }
+  .chat-msg.user {
+    background: var(--accent); color: #fff; align-self: flex-end;
+  }
+  .chat-msg.ai {
+    background: var(--surface2); color: var(--text); align-self: flex-start;
+  }
+  .chat-input-row { display: flex; gap: 8px; }
+  .chat-input {
+    flex: 1; padding: 10px 14px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-size: 0.85rem; font-family: inherit;
+  }
+  .chat-input:focus { outline: none; border-color: var(--accent); }
+
+  /* Product preview image */
+  .product-preview {
+    width: 100%; max-width: 300px; border-radius: 12px;
+    background: #fff; padding: 8px; margin-bottom: 12px;
+  }
+  .product-preview img { width: 100%; border-radius: 8px; }
+
+  /* Loader */
+  .loader {
+    display: inline-block; width: 18px; height: 18px;
+    border: 2px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Sections toggle */
+  .section-toggle {
+    cursor: pointer; user-select: none;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .section-toggle .arrow { transition: transform 0.2s; }
+  .section-toggle.collapsed .arrow { transform: rotate(-90deg); }
+  .section-body { overflow: hidden; transition: max-height 0.3s; }
+  .section-body.collapsed { max-height: 0 !important; padding: 0; }
+
+  /* Tabs for content fields */
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tab {
+    padding: 6px 12px; border-radius: 6px; font-size: 0.75rem;
+    background: var(--surface2); color: var(--text2); cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .tab.active { color: var(--text); border-color: var(--accent); }
+  .tab.has-content { color: var(--green); }
+  .tab.missing-content { color: var(--orange); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Actions bar */
+  .actions-bar {
+    display: flex; gap: 12px; align-items: center; justify-content: space-between;
+    padding-top: 12px; border-top: 1px solid var(--border); margin-top: 16px;
+  }
+
+  /* Validation result */
+  .validation-result {
+    font-size: 0.8rem; padding: 8px 12px; border-radius: 8px;
+    margin-top: 8px; display: none;
+  }
+  .validation-result.ok { display: block; background: rgba(34,197,94,0.1); color: var(--green); }
+  .validation-result.fail { display: block; background: rgba(239,68,68,0.1); color: var(--red); }
+
+  .hidden { display: none; }
+
+  /* Layout */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 768px) {
+    .two-col, .form-grid { grid-template-columns: 1fr; }
+    .steps { flex-direction: column; }
+  }
+
+  /* Toast notifications */
+  .toast-container {
+    position: fixed; top: 20px; right: 20px; z-index: 1000;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .toast {
+    padding: 12px 18px; border-radius: 10px; font-size: 0.82rem;
+    animation: slideIn 0.3s ease; min-width: 250px;
+  }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } }
+  .toast.success { background: rgba(34,197,94,0.15); border: 1px solid var(--green); color: var(--green); }
+  .toast.error { background: rgba(239,68,68,0.15); border: 1px solid var(--red); color: var(--red); }
+  .toast.info { background: rgba(59,130,246,0.15); border: 1px solid var(--blue); color: var(--blue); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <h1>Boni Product Creator</h1>
+  <p class="subtitle">Завантаж фото → AI проаналізує → перевір дані → створи товар на Stage</p>
+
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step active" id="step1"><span class="step-num">1</span> Фото & Аналіз</div>
+    <div class="step" id="step2"><span class="step-num">2</span> Дані товару</div>
+    <div class="step" id="step3"><span class="step-num">3</span> Контент</div>
+    <div class="step" id="step4"><span class="step-num">4</span> Створення</div>
+  </div>
+
+  <!-- STEP 1: Upload & Analyze -->
+  <div id="panel-upload" class="panel">
+    <div class="panel-title">📷 Завантаж фото товару</div>
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="fileInput" multiple accept="image/*">
+      <div class="upload-icon">📁</div>
+      <div>Перетягни фото сюди або <strong>натисни для вибору</strong></div>
+      <div class="upload-text">Можна кілька фото — перше стане основним</div>
+    </div>
+    <div class="thumbnails" id="thumbnails"></div>
+    <textarea class="desc-input" id="userDescription" rows="2"
+      placeholder="Опис товару (опціонально): розмір, матеріал, призначення..."></textarea>
+    <div style="margin-top: 12px; display: flex; gap: 8px; align-items: center;">
+      <button class="btn btn-primary" id="btnAnalyze" disabled>
+        Аналізувати
+      </button>
+      <span id="analyzeStatus" class="hidden" style="font-size: 0.8rem; color: var(--text2);">
+        <span class="loader"></span> AI аналізує фото...
+      </span>
+    </div>
+  </div>
+
+  <!-- STEP 2: Product Data (hidden until analysis done) -->
+  <div id="panel-data" class="hidden">
+    <!-- Missing data banner -->
+    <div class="missing-banner" id="missingBanner">
+      <h3>⚠ Не вистачає даних для створення товару</h3>
+      <ul class="missing-list" id="missingList"></ul>
+      <p style="font-size: 0.78rem; color: var(--text2); margin-top: 8px;">
+        Заповни поля нижче або запитай AI-чат — він допоможе.
+      </p>
+    </div>
+
+    <div class="two-col">
+      <!-- Left: preview + SKU -->
+      <div>
+        <div class="panel">
+          <div class="panel-title">🖼 Фото (білий фон)</div>
+          <div class="product-preview" id="previewContainer">
+            <img id="previewImg" src="" alt="Preview">
+          </div>
+          <div class="thumbnails" id="extraThumbs"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">🏷 SKU</div>
+          <div class="sku-options" id="skuOptions"></div>
+          <div class="form-group" style="margin-top: 10px;">
+            <label>Або введи свій SKU:</label>
+            <input type="text" id="customSku" placeholder="BONI-60001">
+          </div>
+          <div id="skuValidation" class="validation-result"></div>
+        </div>
+      </div>
+
+      <!-- Right: main fields -->
+      <div class="panel">
+        <div class="panel-title">📋 Основні дані</div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Назва <span class="required">*</span></label>
+            <input type="text" id="f_name" placeholder="Назва товару німецькою">
+            <span class="error-msg">Назва обов'язкова</span>
+          </div>
+          <div class="form-group">
+            <label>Ціна продажу (€) <span class="required">*</span></label>
+            <input type="number" id="f_sale_price" step="0.01" placeholder="0.00">
+            <span class="error-msg">Вкажи ціну продажу</span>
+          </div>
+          <div class="form-group">
+            <label>Ціна закупки (€) <span class="required">*</span></label>
+            <input type="number" id="f_purchase_price" step="0.01" placeholder="0.00">
+            <span class="error-msg">Вкажи ціну закупки</span>
+          </div>
+          <div class="form-group">
+            <label>Вага (кг) <span class="required">*</span></label>
+            <input type="number" id="f_weight" step="0.001" placeholder="0.000">
+            <span class="error-msg">Вкажи вагу</span>
+          </div>
+          <div class="form-group">
+            <label>HS Code</label>
+            <input type="text" id="f_hs_code" placeholder="73079300">
+          </div>
+          <div class="form-group">
+            <label>Barcode (EAN)</label>
+            <input type="text" id="f_barcode" placeholder="4260123456789">
+          </div>
+          <div class="form-group">
+            <label>Довжина (см)</label>
+            <input type="number" id="f_length" step="0.1" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label>Ширина (см)</label>
+            <input type="number" id="f_width" step="0.1" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label>Висота (см)</label>
+            <input type="number" id="f_height" step="0.1" placeholder="0">
+          </div>
+        </div>
+
+        <!-- AI Chat -->
+        <div class="chat-container">
+          <div class="panel-title">💬 AI Асистент</div>
+          <div class="chat-messages" id="chatMessages"></div>
+          <div class="chat-input-row">
+            <input class="chat-input" id="chatInput" placeholder="Запитай AI: 'змінити вагу', 'знайти баркод'..."
+              onkeydown="if(event.key==='Enter')sendChat()">
+            <button class="btn btn-secondary" onclick="sendChat()" id="btnChat">→</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Button to proceed -->
+    <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+      <button class="btn btn-primary" onclick="goToContent()">Далі: Контент →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Content fields -->
+  <div id="panel-content" class="hidden">
+    <div class="missing-banner" id="missingContentBanner">
+      <h3>⚠ Бракує текстового контенту</h3>
+      <ul class="missing-list" id="missingContentList"></ul>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">📝 Текстовий контент</div>
+      <div class="tabs" id="contentTabs"></div>
+      <div id="contentPanels"></div>
+    </div>
+
+    <div style="display: flex; gap: 8px; margin-top: 8px;">
+      <button class="btn btn-secondary" onclick="goToData()">← Назад</button>
+      <button class="btn btn-primary" onclick="goToCreate()">Далі: Створення →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: Create -->
+  <div id="panel-create" class="hidden">
+    <div class="missing-banner" id="finalMissingBanner">
+      <h3>⚠ Перед створенням потрібно виправити</h3>
+      <ul class="missing-list" id="finalMissingList"></ul>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">🚀 Створення товару на Stage Odoo</div>
+      <div id="createSummary" style="font-size: 0.85rem; margin-bottom: 16px;"></div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <button class="btn btn-secondary" onclick="goToContent()">← Назад</button>
+        <button class="btn btn-green" id="btnCreate" onclick="createProduct()">
+          Створити на Stage
+        </button>
+        <span id="createStatus" class="hidden" style="font-size: 0.8rem; color: var(--text2);">
+          <span class="loader"></span> Створюємо...
+        </span>
+      </div>
+      <div id="createResult" class="hidden" style="margin-top: 16px;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+const API_MAP = {
+  'f/Oles_Dzhyhryniuk/product_analyze':  '/api/analyze',
+  'f/Oles_Dzhyhryniuk/product_validate': '/api/validate',
+  'f/Oles_Dzhyhryniuk/product_create':   '/api/create',
+  'f/Oles_Dzhyhryniuk/product_chat':     '/api/chat',
+};
+
+// State
+let uploadedImages = []; // [{file, b64, mimetype, url}]
+let productData = {};
+let skuOptions = {};
+let selectedSku = null;
+let whiteBgB64 = null;
+
+// Content field definitions
+const CONTENT_FIELDS = [
+  { key: 'description_sale', label: 'Опис продажу (DE)', type: 'textarea', required: true },
+  { key: 'description_purchase', label: 'Опис закупки (DE)', type: 'textarea', required: false },
+  { key: 'simple_description', label: 'Простий опис (DE)', type: 'input', required: true },
+  { key: 'description_short', label: 'Короткий HTML (DE)', type: 'textarea', required: true },
+  { key: 'description_unique', label: 'SEO унікальний (DE)', type: 'textarea', required: true },
+  { key: 'description_long', label: 'Повний опис (DE)', type: 'textarea', required: true },
+  { key: 'description_amazon', label: 'Amazon (DE)', type: 'textarea', required: false },
+  { key: 'description_ebay', label: 'eBay HTML (DE)', type: 'textarea', required: false },
+  { key: 'website_description', label: 'Website (EN)', type: 'textarea', required: true },
+  { key: 'meta_description', label: 'Meta SEO (DE)', type: 'input', required: true },
+];
+
+// Required main fields
+const REQUIRED_FIELDS = [
+  { id: 'f_name', label: 'Назва товару' },
+  { id: 'f_sale_price', label: 'Ціна продажу', validate: v => parseFloat(v) > 0 },
+  { id: 'f_purchase_price', label: 'Ціна закупки', validate: v => parseFloat(v) > 0 },
+  { id: 'f_weight', label: 'Вага', validate: v => parseFloat(v) > 0 },
+];
+
+// ===== Upload =====
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+
+uploadZone.addEventListener('click', () => fileInput.click());
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+// handleFiles — UI helper (legacy port from Windmill)
+function handleFiles(files) {
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) continue;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const b64 = e.target.result.split(',')[1];
+      uploadedImages.push({
+        file, b64, mimetype: file.type,
+        url: URL.createObjectURL(file)
+      });
+      renderThumbnails();
+      document.getElementById('btnAnalyze').disabled = false;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+// renderThumbnails — UI helper (legacy port from Windmill)
+function renderThumbnails() {
+  const container = document.getElementById('thumbnails');
+  container.innerHTML = '';
+  uploadedImages.forEach((img, i) => {
+    const div = document.createElement('div');
+    div.className = 'thumb' + (i === 0 ? ' main' : '');
+    div.innerHTML = `<img src="${img.url}"><button class="remove" onclick="removeImage(${i})">×</button>`;
+    container.appendChild(div);
+  });
+}
+
+// removeImage — UI helper (legacy port from Windmill)
+function removeImage(i) {
+  uploadedImages.splice(i, 1);
+  renderThumbnails();
+  document.getElementById('btnAnalyze').disabled = uploadedImages.length === 0;
+}
+
+// ===== Analyze =====
+document.getElementById('btnAnalyze').addEventListener('click', analyzeProduct);
+
+// analyzeProduct — UI helper (legacy port from Windmill)
+async function analyzeProduct() {
+  const btn = document.getElementById('btnAnalyze');
+  const status = document.getElementById('analyzeStatus');
+  btn.disabled = true;
+  status.classList.remove('hidden');
+
+  try {
+    const images = uploadedImages.map(img => ({ b64: img.b64, mimetype: img.mimetype }));
+    const description = document.getElementById('userDescription').value;
+
+    const result = await wmRun('f/Oles_Dzhyhryniuk/product_analyze', {
+      images, description
+    });
+
+    if (result.error) {
+      toast(result.error, 'error');
+      return;
+    }
+
+    productData = result.product_data || {};
+    skuOptions = result.sku_options || {};
+    whiteBgB64 = result.white_bg_b64 || null;
+
+    populateForm();
+    setStep(2);
+    document.getElementById('panel-data').classList.remove('hidden');
+    validateMainFields();
+    toast('Аналіз завершено!', 'success');
+  } catch (e) {
+    toast('Помилка: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    status.classList.add('hidden');
+  }
+}
+
+// populateForm — UI helper (legacy port from Windmill)
+function populateForm() {
+  // Preview
+  if (whiteBgB64) {
+    document.getElementById('previewImg').src = 'data:image/jpeg;base64,' + whiteBgB64;
+    document.getElementById('previewContainer').classList.remove('hidden');
+  }
+
+  // Extra images thumbnails
+  const extraThumbs = document.getElementById('extraThumbs');
+  extraThumbs.innerHTML = '';
+  uploadedImages.slice(1).forEach((img, i) => {
+    const div = document.createElement('div');
+    div.className = 'thumb';
+    div.innerHTML = `<img src="${img.url}">`;
+    extraThumbs.appendChild(div);
+  });
+
+  // Main fields
+  setVal('f_name', productData.name);
+  setVal('f_sale_price', productData.sale_price);
+  setVal('f_purchase_price', productData.purchase_price);
+  setVal('f_weight', productData.weight);
+  setVal('f_hs_code', productData.hs_code);
+  setVal('f_barcode', productData.barcode);
+  setVal('f_length', productData.length);
+  setVal('f_width', productData.width);
+  setVal('f_height', productData.height);
+
+  // SKU options
+  renderSkuOptions();
+
+  // Content fields
+  renderContentTabs();
+}
+
+// setVal — UI helper (legacy port from Windmill)
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (el && val !== undefined && val !== null) el.value = val;
+}
+
+// getVal — UI helper (legacy port from Windmill)
+function getVal(id) {
+  return document.getElementById(id)?.value || '';
+}
+
+// ===== SKU =====
+function renderSkuOptions() {
+  const container = document.getElementById('skuOptions');
+  container.innerHTML = '';
+  for (const [prefix, data] of Object.entries(skuOptions)) {
+    const div = document.createElement('div');
+    div.className = 'sku-option';
+    div.dataset.sku = data.sku;
+    div.innerHTML = `<div class="sku-code">${data.sku}</div><div class="sku-company">${data.company_name}</div>`;
+    div.addEventListener('click', () => selectSku(data.sku, div));
+    container.appendChild(div);
+  }
+}
+
+// selectSku — UI helper (legacy port from Windmill)
+function selectSku(sku, el) {
+  document.querySelectorAll('.sku-option').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedSku = sku;
+  document.getElementById('customSku').value = sku;
+  validateSku(sku);
+}
+
+document.getElementById('customSku')?.addEventListener('blur', function() {
+  if (this.value) {
+    selectedSku = this.value;
+    document.querySelectorAll('.sku-option').forEach(e => e.classList.remove('selected'));
+    validateSku(this.value);
+  }
+});
+
+// validateSku — UI helper (legacy port from Windmill)
+async function validateSku(sku) {
+  const div = document.getElementById('skuValidation');
+  const barcode = getVal('f_barcode');
+  try {
+    const result = await wmRun('f/Oles_Dzhyhryniuk/product_validate', { sku, barcode });
+    if (result.sku_exists) {
+      div.className = 'validation-result fail';
+      div.textContent = `SKU вже існує: ${result.sku_product}`;
+    } else {
+      div.className = 'validation-result ok';
+      div.textContent = 'SKU вільний ✓';
+    }
+  } catch (e) {
+    div.className = 'validation-result fail';
+    div.textContent = 'Помилка перевірки';
+  }
+}
+
+// ===== Validation =====
+function validateMainFields() {
+  const missing = [];
+  const banner = document.getElementById('missingBanner');
+  const list = document.getElementById('missingList');
+
+  // Required fields
+  REQUIRED_FIELDS.forEach(f => {
+    const val = getVal(f.id);
+    const group = document.getElementById(f.id)?.closest('.form-group');
+    const isValid = f.validate ? f.validate(val) : val.trim() !== '';
+    if (!isValid) {
+      missing.push({ label: f.label, id: f.id });
+      group?.classList.add('error');
+    } else {
+      group?.classList.remove('error');
+    }
+  });
+
+  // SKU check
+  if (!selectedSku && !getVal('customSku')) {
+    missing.push({ label: 'SKU не вибрано', id: 'customSku' });
+  }
+
+  // Weight sanity
+  const weight = parseFloat(getVal('f_weight'));
+  if (weight > 50) {
+    missing.push({ label: `Вага ${weight} кг — занадто велика? Перевір!`, id: 'f_weight' });
+  }
+
+  // Prices sanity
+  const salePrice = parseFloat(getVal('f_sale_price'));
+  const purchasePrice = parseFloat(getVal('f_purchase_price'));
+  if (salePrice > 0 && purchasePrice > 0 && purchasePrice >= salePrice) {
+    missing.push({ label: 'Ціна закупки ≥ ціни продажу — перевір!', id: 'f_purchase_price' });
+  }
+
+  // Render
+  list.innerHTML = '';
+  missing.forEach(m => {
+    const li = document.createElement('li');
+    li.innerHTML = `${m.label} <button class="fix-btn" onclick="document.getElementById('${m.id}').focus()">виправити</button>`;
+    list.appendChild(li);
+  });
+
+  banner.classList.toggle('show', missing.length > 0);
+  return missing.length === 0;
+}
+
+// Re-validate on input change
+document.querySelectorAll('#panel-data input, #panel-data select').forEach(el => {
+  el.addEventListener('input', () => setTimeout(validateMainFields, 100));
+});
+
+// ===== Content Tabs =====
+function renderContentTabs() {
+  const tabsContainer = document.getElementById('contentTabs');
+  const panelsContainer = document.getElementById('contentPanels');
+  tabsContainer.innerHTML = '';
+  panelsContainer.innerHTML = '';
+
+  CONTENT_FIELDS.forEach((field, i) => {
+    const value = productData[field.key] || '';
+
+    // Tab
+    const tab = document.createElement('div');
+    tab.className = 'tab' + (i === 0 ? ' active' : '');
+    if (value) tab.classList.add('has-content');
+    else if (field.required) tab.classList.add('missing-content');
+    tab.textContent = field.label;
+    tab.dataset.idx = i;
+    tab.addEventListener('click', () => switchTab(i));
+    tabsContainer.appendChild(tab);
+
+    // Panel
+    const panel = document.createElement('div');
+    panel.className = 'tab-content' + (i === 0 ? ' active' : '');
+    panel.id = 'content-panel-' + i;
+
+    if (field.type === 'textarea') {
+      panel.innerHTML = `<textarea class="desc-input" id="cf_${field.key}" rows="8"
+        placeholder="${field.label}">${value}</textarea>`;
+    } else {
+      panel.innerHTML = `<input class="desc-input" id="cf_${field.key}" value="${escHtml(value)}"
+        placeholder="${field.label}">`;
+    }
+    panelsContainer.appendChild(panel);
+  });
+}
+
+// switchTab — UI helper (legacy port from Windmill)
+function switchTab(idx) {
+  document.querySelectorAll('#contentTabs .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
+  document.querySelector(`#contentTabs .tab[data-idx="${idx}"]`).classList.add('active');
+  document.getElementById('content-panel-' + idx).classList.add('active');
+}
+
+// validateContent — UI helper (legacy port from Windmill)
+function validateContent() {
+  const missing = [];
+  CONTENT_FIELDS.forEach(f => {
+    if (!f.required) return;
+    const el = document.getElementById('cf_' + f.key);
+    if (!el || !el.value.trim()) {
+      missing.push(f.label);
+    }
+  });
+
+  const banner = document.getElementById('missingContentBanner');
+  const list = document.getElementById('missingContentList');
+  list.innerHTML = '';
+  missing.forEach(m => {
+    const li = document.createElement('li');
+    li.textContent = m;
+    list.appendChild(li);
+  });
+  banner.classList.toggle('show', missing.length > 0);
+  return missing.length === 0;
+}
+
+// ===== Navigation =====
+function setStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('step' + i);
+    el.classList.remove('active', 'done');
+    if (i < n) el.classList.add('done');
+    if (i === n) el.classList.add('active');
+  }
+}
+
+// goToData — UI helper (legacy port from Windmill)
+function goToData() {
+  setStep(2);
+  document.getElementById('panel-data').classList.remove('hidden');
+  document.getElementById('panel-content').classList.add('hidden');
+  document.getElementById('panel-create').classList.add('hidden');
+}
+
+// goToContent — UI helper (legacy port from Windmill)
+function goToContent() {
+  if (!validateMainFields()) {
+    toast('Спочатку заповни обов\'язкові поля', 'error');
+    return;
+  }
+  setStep(3);
+  validateContent();
+  document.getElementById('panel-data').classList.add('hidden');
+  document.getElementById('panel-content').classList.remove('hidden');
+  document.getElementById('panel-create').classList.add('hidden');
+}
+
+// goToCreate — UI helper (legacy port from Windmill)
+function goToCreate() {
+  setStep(4);
+  document.getElementById('panel-data').classList.add('hidden');
+  document.getElementById('panel-content').classList.add('hidden');
+  document.getElementById('panel-create').classList.remove('hidden');
+  renderCreateSummary();
+}
+
+// renderCreateSummary — UI helper (legacy port from Windmill)
+function renderCreateSummary() {
+  const sku = getVal('customSku') || selectedSku || '???';
+  const name = getVal('f_name');
+  const price = getVal('f_sale_price');
+  const weight = getVal('f_weight');
+
+  // Final validation
+  const allMissing = [];
+  if (!name) allMissing.push('Назва товару');
+  if (!parseFloat(price)) allMissing.push('Ціна продажу');
+  if (!parseFloat(weight)) allMissing.push('Вага');
+  if (!sku || sku === '???') allMissing.push('SKU');
+
+  CONTENT_FIELDS.forEach(f => {
+    if (!f.required) return;
+    const el = document.getElementById('cf_' + f.key);
+    if (!el || !el.value.trim()) allMissing.push(f.label);
+  });
+
+  const banner = document.getElementById('finalMissingBanner');
+  const list = document.getElementById('finalMissingList');
+  list.innerHTML = '';
+  allMissing.forEach(m => {
+    const li = document.createElement('li');
+    li.textContent = m;
+    list.appendChild(li);
+  });
+  banner.classList.toggle('show', allMissing.length > 0);
+  document.getElementById('btnCreate').disabled = allMissing.length > 0;
+
+  const prefix = sku.split('-')[0]?.toUpperCase();
+  const company = { BONI: 'Boni-Shop GmbH', IZS: 'Boni-Shop GmbH', WF: 'HAJUS AG', NEW: 'HAJUS AG' }[prefix] || '?';
+
+  document.getElementById('createSummary').innerHTML = `
+    <table style="font-size:0.82rem;">
+      <tr><td style="color:var(--text2);padding-right:16px;">SKU:</td><td><strong>${sku}</strong></td></tr>
+      <tr><td style="color:var(--text2);">Назва:</td><td>${escHtml(name)}</td></tr>
+      <tr><td style="color:var(--text2);">Компанія:</td><td>${company}</td></tr>
+      <tr><td style="color:var(--text2);">Ціна:</td><td>€${price}</td></tr>
+      <tr><td style="color:var(--text2);">Вага:</td><td>${weight} кг</td></tr>
+      <tr><td style="color:var(--text2);">Фото:</td><td>${uploadedImages.length} шт</td></tr>
+    </table>
+  `;
+}
+
+// ===== Create =====
+async function createProduct() {
+  const btn = document.getElementById('btnCreate');
+  const status = document.getElementById('createStatus');
+  btn.disabled = true;
+  status.classList.remove('hidden');
+
+  try {
+    const sku = getVal('customSku') || selectedSku;
+    const params = {
+      name: getVal('f_name'),
+      default_code: sku,
+      list_price: parseFloat(getVal('f_sale_price')) || 0,
+      standard_price: parseFloat(getVal('f_purchase_price')) || 0,
+      weight: parseFloat(getVal('f_weight')) || 0,
+      length: parseFloat(getVal('f_length')) || 0,
+      width: parseFloat(getVal('f_width')) || 0,
+      height: parseFloat(getVal('f_height')) || 0,
+      hs_code: getVal('f_hs_code'),
+      barcode: getVal('f_barcode'),
+      image_b64: whiteBgB64 || uploadedImages[0]?.b64 || '',
+      extra_images: uploadedImages.slice(1).map(img => img.b64),
+    };
+
+    // Content fields
+    CONTENT_FIELDS.forEach(f => {
+      const el = document.getElementById('cf_' + f.key);
+      if (el) params[f.key] = el.value;
+    });
+
+    const result = await wmRun('f/Oles_Dzhyhryniuk/product_create', params);
+
+    const div = document.getElementById('createResult');
+    div.classList.remove('hidden');
+    div.innerHTML = `
+      <div style="background:rgba(34,197,94,0.1); border:1px solid var(--green); border-radius:10px; padding:16px;">
+        <h3 style="color:var(--green); margin-bottom:8px;">✓ Товар створено!</h3>
+        <p style="font-size:0.85rem;">${result.sku} — ${result.name}</p>
+        <a href="${result.product_url}" target="_blank"
+           style="color:var(--accent); font-size:0.85rem;">Відкрити в Odoo Stage →</a>
+      </div>
+    `;
+    setStep(4);
+    document.getElementById('step4').classList.add('done');
+    toast('Товар створено!', 'success');
+  } catch (e) {
+    toast('Помилка: ' + e.message, 'error');
+    btn.disabled = false;
+  } finally {
+    status.classList.add('hidden');
+  }
+}
+
+// ===== Chat =====
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  addChatMsg(msg, 'user');
+
+  const images = uploadedImages.map(img => ({ b64: img.b64, mimetype: img.mimetype }));
+
+  // Gather current form data
+  const currentData = {
+    name: getVal('f_name'),
+    default_code: getVal('customSku') || selectedSku || '',
+    sale_price: parseFloat(getVal('f_sale_price')) || 0,
+    purchase_price: parseFloat(getVal('f_purchase_price')) || 0,
+    weight: parseFloat(getVal('f_weight')) || 0,
+    hs_code: getVal('f_hs_code'),
+    barcode: getVal('f_barcode'),
+    length: parseFloat(getVal('f_length')) || 0,
+    width: parseFloat(getVal('f_width')) || 0,
+    height: parseFloat(getVal('f_height')) || 0,
+  };
+  CONTENT_FIELDS.forEach(f => {
+    const el = document.getElementById('cf_' + f.key);
+    if (el) currentData[f.key] = el.value;
+  });
+
+  const thinkingId = addChatMsg('Думаю...', 'ai');
+
+  try {
+    const result = await wmRun('f/Oles_Dzhyhryniuk/product_chat', {
+      message: msg, product_data: currentData, images: images.slice(0, 3)
+    });
+
+    removeChatMsg(thinkingId);
+    addChatMsg(result.response, 'ai');
+
+    // Apply updates
+    if (result.updates && Object.keys(result.updates).length > 0) {
+      applyUpdates(result.updates);
+      toast(`Оновлено ${Object.keys(result.updates).length} полів`, 'info');
+    }
+  } catch (e) {
+    removeChatMsg(thinkingId);
+    addChatMsg('Помилка: ' + e.message, 'ai');
+  }
+}
+
+// applyUpdates — UI helper (legacy port from Windmill)
+function applyUpdates(updates) {
+  const fieldMap = {
+    name: 'f_name', sale_price: 'f_sale_price', purchase_price: 'f_purchase_price',
+    weight: 'f_weight', hs_code: 'f_hs_code', barcode: 'f_barcode',
+    length: 'f_length', width: 'f_width', height: 'f_height',
+  };
+
+  for (const [key, val] of Object.entries(updates)) {
+    if (fieldMap[key]) {
+      setVal(fieldMap[key], val);
+    } else {
+      // Content field
+      const el = document.getElementById('cf_' + key);
+      if (el) el.value = val;
+    }
+  }
+  validateMainFields();
+}
+
+let chatMsgId = 0;
+// addChatMsg — UI helper (legacy port from Windmill)
+function addChatMsg(text, type) {
+  const id = 'chat-' + (++chatMsgId);
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + type;
+  div.id = id;
+  div.textContent = text;
+  document.getElementById('chatMessages').appendChild(div);
+  div.scrollIntoView({ behavior: 'smooth' });
+  return id;
+}
+
+// removeChatMsg — UI helper (legacy port from Windmill)
+function removeChatMsg(id) {
+  document.getElementById(id)?.remove();
+}
+
+// ===== Backend API (Flask, basic-auth + IP whitelist) =====
+// Browser includes Basic auth header automatically after the first prompt.
+async function wmRun(path, args) {
+  const endpoint = API_MAP[path] || path;
+  const resp = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(args),
+    credentials: 'same-origin',
+  });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(`API ${resp.status}: ${text.substring(0, 200)}`);
+  }
+  return await resp.json();
+}
+
+// ===== Utils =====
+function toast(msg, type = 'info') {
+  const div = document.createElement('div');
+  div.className = 'toast ' + type;
+  div.textContent = msg;
+  document.getElementById('toasts').appendChild(div);
+  setTimeout(() => div.remove(), 4000);
+}
+
+// escHtml — UI helper (legacy port from Windmill)
+function escHtml(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
