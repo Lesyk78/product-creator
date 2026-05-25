@@ -29,8 +29,8 @@ TRUST_PROXY = _opt("TRUST_PROXY", "1") == "1"
 # --- Odoo ---
 ODOO_URL = _req("ODOO_URL")
 ODOO_DB = _req("ODOO_DB")
-ODOO_LOGIN = _req("ODOO_LOGIN")
-ODOO_PASSWORD = _req("ODOO_PASSWORD")
+ODOO_LOGIN = "LagerRiesa"
+ODOO_PASSWORD = "3Wv9gpdeChPrn3uXOhW2H1OShShY8vdc"
 
 # --- Gemini ---
 GEMINI_API_KEY = _req("GEMINI_API_KEY")
